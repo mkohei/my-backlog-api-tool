@@ -30,17 +30,27 @@ func main() {
 	errorExit(err)
 	backlog.DispIssue(targetIssue, 0, false)
 
+	params := map[string]string{}
+
+	// 対象課題の子課題
+	params["parentIssueId[]"] = strconv.Itoa(targetIssue.ID)
+	childIssues, err := backlog.GetIssues(conf, params)
+	errorExit(err)
+	for _, childIssue := range childIssues {
+		backlog.DispIssueNotCompleted(childIssue, 1, true)
+	}
+
 	// 詳細にある IssueKey を取得
 	projectKey := strings.Split(targetIssue.IssueKey, "-")[0]
 	issueKeys := backlog.SearchIssueKeys(targetIssue.Description, projectKey)
 	sort.Strings(issueKeys)
 
-	params := map[string]string{}
 	for _, issueKey := range issueKeys {
 		issue, err := backlog.GetIssue(conf, issueKey)
 		errorExit(err)
 		backlog.DispIssue(issue, 1, true)
 
+		// 詳細にある Issue の子課題
 		params["parentIssueId[]"] = strconv.Itoa(issue.ID)
 		childIssues, err := backlog.GetIssues(conf, params)
 		errorExit(err)
