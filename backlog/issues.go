@@ -1,4 +1,4 @@
-// 課題一覧の取得
+// Package backlog provides backlog api
 package backlog
 
 import (
@@ -6,34 +6,45 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
-	"strings"
 
 	"github.com/mkohei/my-backlog-api-tool/config"
 )
 
-const ISSUES_URL = "/api/v2/issues"
+// IssuesURL is issues endpoint
+const IssuesURL = "/api/v2/issues"
 
+// Issue show response issue
 type Issue struct {
-	ID          int    `json:"id"`
-	ProjectID   int    `json:"projectId"`
-	IssueKey    string `json:"issueKey"`
-	Summary     string `json:"summary"`
-	Description string `json:"description"`
-	Status      Status `json:"status"`
+	ID          int      `json:"id"`
+	ProjectID   int      `json:"projectId"`
+	IssueKey    string   `json:"issueKey"`
+	Summary     string   `json:"summary"`
+	Description string   `json:"description"`
+	Status      Status   `json:"status"`
+	Assignee    Assignee `json:"assignee"`
 }
 
+// Status show response status
 type Status struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
 }
 
+// Assignee show response asignee
+type Assignee struct {
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	MailAddress string `json:"mailAddress"`
+}
+
+// GetIssue implements to get issue by IssueKey
 func GetIssue(conf config.Config, issueKey string) (Issue, error) {
 	var issue Issue
 
 	values := url.Values{}
 	values.Add("apiKey", conf.APIKey)
 
-	url := conf.SpaceURL + ISSUES_URL + "/" + issueKey + "?" + values.Encode()
+	url := makeIssueURL(conf, issueKey) + "?" + values.Encode()
 	body, err := Get(url)
 	if err != nil {
 		fmt.Println(err)
@@ -44,6 +55,7 @@ func GetIssue(conf config.Config, issueKey string) (Issue, error) {
 	return issue, nil
 }
 
+// GetIssues implements to get issue by params
 func GetIssues(conf config.Config, params map[string]string) ([]Issue, error) {
 	values := url.Values{}
 	values.Add("apiKey", conf.APIKey)
@@ -51,7 +63,7 @@ func GetIssues(conf config.Config, params map[string]string) ([]Issue, error) {
 		values.Add(key, val)
 	}
 
-	url := conf.SpaceURL + ISSUES_URL + "?" + values.Encode()
+	url := conf.SpaceURL + IssuesURL + "?" + values.Encode()
 	body, err := Get(url)
 	if err != nil {
 		fmt.Println(err)
@@ -63,27 +75,18 @@ func GetIssues(conf config.Config, params map[string]string) ([]Issue, error) {
 	return issues, nil
 }
 
+// SearchIssueKeys provides to search IssueKey in text
 func SearchIssueKeys(str string, projectKey string) []string {
 	rep := regexp.MustCompile(projectKey + `-[\d]+`)
 	keys := rep.FindAllString(str, -1)
 	return keys
 }
 
-func DispIssue(issue Issue, layer int, showStatus bool) {
-	buf := strings.Repeat("    ", layer)
-	if layer != 0 {
-		buf += "->"
-	}
-	status := ""
-	if showStatus {
-		status = "[ " + issue.Status.Name + " ]"
-	}
-	fmt.Println(buf, status, issue.IssueKey, issue.Summary)
+func makeIssueURL(conf config.Config, issueKey string) string {
+	return conf.SpaceURL + IssuesURL + "/" + issueKey
 }
 
-func DispIssueNotCompleted(issue Issue, layout int, showStatus bool) {
-	completeID := 4
-	if completeID != issue.Status.ID {
-		DispIssue(issue, layout, showStatus)
-	}
+// MakeViewURL provides backlog issue view url
+func MakeViewURL(conf config.Config, issueKey string) string {
+	return conf.SpaceURL + "/view/" + issueKey
 }
