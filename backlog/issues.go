@@ -15,13 +15,14 @@ const IssuesURL = "/api/v2/issues"
 
 // Issue show response issue
 type Issue struct {
-	ID          int      `json:"id"`
-	ProjectID   int      `json:"projectId"`
-	IssueKey    string   `json:"issueKey"`
-	Summary     string   `json:"summary"`
-	Description string   `json:"description"`
-	Status      Status   `json:"status"`
-	Assignee    Assignee `json:"assignee"`
+	ID            int      `json:"id"`
+	ProjectID     int      `json:"projectId"`
+	IssueKey      string   `json:"issueKey"`
+	Summary       string   `json:"summary"`
+	Description   string   `json:"description"`
+	Status        Status   `json:"status"`
+	Assignee      Assignee `json:"assignee"`
+	ParentIssueID int      `json:"parentIssueId"`
 }
 
 // Status show response status
